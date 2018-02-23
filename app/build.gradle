@@ -250,6 +250,11 @@ android.applicationVariants.all { variant ->
         buildConfigField 'String', 'ADJUST_TOKEN', 'null'
         println("Not setting adjust token (Not a focus release build)")
     }
+
+    println 'BITRISEIO_ANDROID_KEYSTORE_URL: ' + System.getenv("BITRISEIO_ANDROID_KEYSTORE_URL")
+    println 'BITRISEIO_ANDROID_KEYSTORE_PASSWORD: ' + System.getenv("BITRISEIO_ANDROID_KEYSTORE_PASSWORD")
+    println 'BITRISEIO_ANDROID_KEYSTORE_ALIAS: ' + System.getenv("BITRISEIO_ANDROID_KEYSTORE_ALIAS")
+    println 'BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: ' + System.getenv("BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD")
 }
 
 // -------------------------------------------------------------------------------------------------
