@@ -520,8 +520,7 @@ public class TabsSession {
 
         private void hoistTab(final Tab tab) {
             if (tab != null && tab.getTabView() == null) {
-                String url = tab.getUrl();
-                tab.createView(this.activity).loadUrl(url);
+                tab.createView(this.activity);
             }
 
             for (final TabsChromeListener l : this.chromeListeners) {

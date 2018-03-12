@@ -9,13 +9,17 @@ import android.support.annotation.Nullable;
 import org.mozilla.focus.R;
 import org.mozilla.focus.persistence.TabModel;
 import org.mozilla.focus.persistence.TabsDatabase;
+import org.mozilla.focus.utils.FileUtils;
 
+import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
 import static android.os.AsyncTask.SERIAL_EXECUTOR;
 
 public class TabModelStore {
+
+    public static final String TAB_DIR = "tabs_cache";
 
     private static volatile TabModelStore instance;
     private TabsDatabase tabsDatabase;
@@ -53,7 +57,7 @@ public class TabModelStore {
                 .putString(context.getResources().getString(R.string.pref_key_current_tab_id), currentTabId)
                 .apply();
 
-        new SaveTabsTask(tabsDatabase, listener).executeOnExecutor(SERIAL_EXECUTOR, tabModelList.toArray(new TabModel[0]));
+        new SaveTabsTask(context, tabsDatabase, listener).executeOnExecutor(SERIAL_EXECUTOR, tabModelList.toArray(new TabModel[0]));
     }
 
     private static class QueryTabsTask extends AsyncTask<Void, Void, List<TabModel>> {
@@ -63,7 +67,7 @@ public class TabModelStore {
         private WeakReference<AsyncQueryListener> listenerRef;
 
         public QueryTabsTask(Context context, TabsDatabase tabsDatabase, AsyncQueryListener listener) {
-            this.contextRef = new WeakReference(context);
+            this.contextRef = new WeakReference<>(context);
             this.tabsDatabase = tabsDatabase;
             this.listenerRef = new WeakReference<>(listener);
         }
@@ -71,7 +75,17 @@ public class TabModelStore {
         @Override
         protected List<TabModel> doInBackground(Void... voids) {
             if (tabsDatabase != null) {
-                return tabsDatabase.tabDao().getTabs();
+                List<TabModel> tabModelList = tabsDatabase.tabDao().getTabs();
+                Context context = contextRef.get();
+                if (context != null) {
+                    File cacheDir = new File(context.getCacheDir(), TAB_DIR);
+                    for (TabModel tabModel : tabModelList) {
+                        if (tabModel != null) {
+                            tabModel.setWebViewState(FileUtils.readBundleFromStorage(cacheDir, tabModel.getId()));
+                        }
+                    }
+                }
+                return tabModelList;
             }
 
             return null;
@@ -90,10 +104,12 @@ public class TabModelStore {
 
     private static class SaveTabsTask extends AsyncTask<TabModel, Void, Void> {
 
+        private WeakReference<Context> contextRef;
         private TabsDatabase tabsDatabase;
         private WeakReference<AsyncSaveListener> listenerRef;
 
-        public SaveTabsTask(TabsDatabase tabsDatabase, AsyncSaveListener listener) {
+        public SaveTabsTask(Context context, TabsDatabase tabsDatabase, AsyncSaveListener listener) {
+            this.contextRef = new WeakReference<>(context);
             this.tabsDatabase = tabsDatabase;
             this.listenerRef = new WeakReference<>(listener);
         }
@@ -104,6 +120,16 @@ public class TabModelStore {
                 tabsDatabase.tabDao().deleteAllTabs();
 
                 if (tabModelList != null) {
+                    Context context = contextRef.get();
+                    if (context != null) {
+                        File cacheDir = new File(context.getCacheDir(), TAB_DIR);
+                        for (TabModel tabModel : tabModelList) {
+                            if (tabModel != null && tabModel.getWebViewState() != null) {
+                                FileUtils.writeBundleToStorage(cacheDir, tabModel.getId(), tabModel.getWebViewState());
+                            }
+                        }
+                    }
+
                     tabsDatabase.tabDao().insertTabs(tabModelList);
                 }
             }

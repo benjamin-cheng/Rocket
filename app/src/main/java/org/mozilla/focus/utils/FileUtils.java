@@ -7,6 +7,8 @@ package org.mozilla.focus.utils;
 
 import android.content.Context;
 import android.media.MediaScannerConnection;
+import android.os.Bundle;
+import android.os.Parcel;
 import android.support.annotation.NonNull;
 import android.webkit.WebStorage;
 
@@ -184,5 +186,51 @@ public class FileUtils {
     public static long clearCache(Context context) {
         WebStorage.getInstance().deleteAllData();
         return FileUtils.deleteWebViewCacheDirectory(context);
+    }
+
+    // FIXME: we should not use marshall
+    public static void writeBundleToStorage(@NonNull final File dir,
+                                            @NonNull final String fileName,
+                                            @NonNull final Bundle bundle) {
+        ensureDir(dir);
+        final File outputFile = new File(dir, fileName);
+        final FileOutputStream fos;
+        try {
+            fos = new FileOutputStream(outputFile);
+            Parcel parcel = Parcel.obtain();
+            parcel.writeBundle(bundle);
+            fos.write(parcel.marshall());
+            fos.flush();
+            fos.close();
+            parcel.recycle();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    // FIXME: we should not use marshall
+    public static Bundle readBundleFromStorage(@NonNull final File dir,
+                                               @NonNull final String fileName) {
+        ensureDir(dir);
+        final File input = new File(dir, fileName);
+        final FileInputStream fis;
+        try {
+            fis = new FileInputStream(input);
+            Parcel parcel = Parcel.obtain();
+            byte[] data = new byte[(int) fis.getChannel().size()];
+
+            fis.read(data, 0, data.length);
+            parcel.unmarshall(data, 0, data.length);
+            parcel.setDataPosition(0);
+
+            Bundle bundle = parcel.readBundle();
+            bundle.putAll(bundle);
+            parcel.recycle();
+            fis.close();
+            return bundle;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
