@@ -29,6 +29,7 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.content.pm.ShortcutManagerCompat;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
@@ -74,6 +75,8 @@ import org.mozilla.focus.widget.FragmentListener;
 import java.io.File;
 import java.util.List;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends LocaleAwareAppCompatActivity implements FragmentListener,
         SharedPreferences.OnSharedPreferenceChangeListener,
@@ -586,12 +589,44 @@ public class MainActivity extends LocaleAwareAppCompatActivity implements Fragme
         super.onDestroy();
     }
 
+    @Override
+    public void onLowMemory() {
+        Log.d("MainActivity", "onLowMemory:");
+        super.onLowMemory();
+    }
+
     private void onPreferenceClicked() {
         openPreferences();
     }
 
     private void onExitClicked() {
-        finish();
+        //finish();
+
+        Timer timer = new Timer();
+        TimerTask addTabTask = new AddTabTask();
+        timer.scheduleAtFixedRate(addTabTask, 0, 5000);
+    }
+
+    class AddTabTask extends TimerTask {
+        public void run() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (getSupportFragmentManager().isStateSaved()) {
+                        return;
+                    }
+
+                    screenNavigator.showBrowserScreen("https://tw.yahoo.com", true);
+
+                    final Runtime runtime = Runtime.getRuntime();
+                    final long usedMemInMB=(runtime.totalMemory() - runtime.freeMemory()) / 1048576L;
+                    final long maxHeapSizeInMB=runtime.maxMemory() / 1048576L;
+                    final long availHeapSizeInMB = maxHeapSizeInMB - usedMemInMB;
+                    Log.d("MainActivity", "Memory usage: maxHeapSizeInMB => " + maxHeapSizeInMB
+                            + ", usedMemInMB => " + usedMemInMB + ", availHeapSizeInMB => " + availHeapSizeInMB);
+                }
+            });
+        }
     }
 
     private void onDownloadClicked() {

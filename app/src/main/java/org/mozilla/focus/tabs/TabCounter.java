@@ -9,6 +9,7 @@ import android.graphics.drawable.Drawable;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.ViewTreeObserver;
@@ -31,11 +32,11 @@ public class TabCounter extends RelativeLayout {
     private int count;
     private float currentTextRatio;
 
-    public static final int MAX_VISIBLE_TABS = 99;
+    public static final int MAX_VISIBLE_TABS = 999;
     public static final String SO_MANY_TABS_OPEN = "∞";
 
     private static final float ONE_DIGIT_SIZE_RATIO = 0.6f;
-    private static final float TWO_DIGITS_SIZE_RATIO = 0.5f;
+    private static final float TWO_DIGITS_SIZE_RATIO = 0.3f;
 
     public TabCounter(Context context) {
         this(context, null);
@@ -72,6 +73,7 @@ public class TabCounter extends RelativeLayout {
     }
 
     public void setCountWithAnimation(final int count) {
+        Log.d("TabCounter", "setCountWithAnimation: " + count);
         // Don't animate from initial state.
         if (this.count == 0) {
             setCount(count);

@@ -1,12 +1,18 @@
 package org.mozilla.focus.activity;
 
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.SystemClock;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.contrib.RecyclerViewActions;
 import android.support.test.espresso.matcher.ViewMatchers;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
+import android.widget.Toast;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,6 +21,10 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.persistence.TabModel;
 import org.mozilla.focus.persistence.TabsDatabase;
 import org.mozilla.focus.utils.AndroidTestUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
@@ -68,6 +78,46 @@ public class SaveRestoreTabsTest {
 
         activityRule.launchActivity(new Intent());
         onView(allOf(withId(R.id.counter_text), isDescendantOfA(withId(R.id.browser_screen_menu)))).check(matches(withText("2")));
+    }
+
+    @Test
+    public void restorePreviousManyTabs() {
+//        List<TabModel> tabModelList = new ArrayList<>();
+//        for (int i = 0; i < 1000; i++) {
+//            tabModelList.add(new TabModel(UUID.randomUUID().toString(), "ID_HOME", "Yahoo TW", "https://tw.yahoo.com"));
+//        }
+//
+//        tabsDatabase.tabDao().insertTabs(tabModelList.toArray(new TabModel[0]));
+//        AndroidTestUtils.setFocusTabId(tabModelList.get(0).getId());
+
+        activityRule.launchActivity(new Intent());
+//        onView(allOf(withId(R.id.counter_text), isDescendantOfA(withId(R.id.browser_screen_menu)))).check(matches(withText("∞")));
+
+        onView(ViewMatchers.withId(R.id.main_list))
+                .perform(RecyclerViewActions.actionOnItemAtPosition(0, click()));
+
+        for (int i = 0; i < 1000; i++) {
+            onView(allOf(withId(R.id.btn_open_new_tab), isDescendantOfA(withId(R.id.browser_screen_menu)))).perform(click());
+            SystemClock.sleep(500);
+            onView(ViewMatchers.withId(R.id.main_list))
+                    .perform(RecyclerViewActions.actionOnItemAtPosition(0, click()));
+            //showToast("New Tab => " + (i + 1));
+        }
+    }
+
+    /**
+     * Display toast
+     *
+     * @param message message that toast display
+     */
+    public void showToast(final String message) {
+        final Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(InstrumentationRegistry.getTargetContext(), message, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Test
