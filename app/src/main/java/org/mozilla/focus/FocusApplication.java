@@ -6,6 +6,7 @@
 package org.mozilla.focus;
 
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import org.mozilla.focus.download.DownloadInfoManager;
 import org.mozilla.focus.history.BrowsingHistoryManager;
@@ -35,5 +36,17 @@ public class FocusApplication extends LocaleAwareApplication {
         ScreenshotManager.getInstance().init(this);
         DownloadInfoManager.getInstance().init(this);
 
+    }
+
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        Log.e("FocusApplication", "onTrimMemory level: " + level);
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        Log.e("FocusApplication", "onLowMemory");
     }
 }

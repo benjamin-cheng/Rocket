@@ -8,6 +8,9 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
+import android.os.Build;
+import android.util.Log;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -220,4 +223,16 @@ import org.mozilla.focus.utils.UrlUtils;
         super.onReceivedError(webView, errorCode, description, failingUrl);
     }
 
+    @Override
+    public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+        // Renderer crashed because of an internal error, such as a memory
+        // access violation.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Log.e("FocusWebViewClient", "The WebView rendering process crashed! didCrash: " + detail.didCrash());
+        } else {
+            Log.e("FocusWebViewClient", "The WebView rendering process crashed!");
+        }
+
+        return false;
+    }
 }
