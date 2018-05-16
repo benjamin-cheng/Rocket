@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import org.mozilla.focus.Inject;
 import org.mozilla.focus.R;
@@ -19,6 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static android.os.AsyncTask.SERIAL_EXECUTOR;
+import static org.mozilla.focus.activity.MainActivity.TAB_MODEL_TAG;
 
 public class TabModelStore {
 
@@ -83,9 +85,11 @@ public class TabModelStore {
         protected List<TabModel> doInBackground(Void... voids) {
             if (tabsDatabase != null) {
                 List<TabModel> tabModelList = tabsDatabase.tabDao().getTabs();
+                Log.i(TAB_MODEL_TAG, "QueryTabsTask getTabs()");
                 Context context = contextRef.get();
                 if (context != null && tabModelList != null) {
                     restoreWebViewState(context, tabModelList);
+                    Log.i(TAB_MODEL_TAG, "QueryTabsTask restoreWebViewState()");
                 }
                 return tabModelList;
             }
@@ -130,14 +134,17 @@ public class TabModelStore {
         protected Void doInBackground(TabModel... tabModelList) {
             if (tabsDatabase != null) {
                 tabsDatabase.tabDao().deleteAllTabs();
+                Log.i(TAB_MODEL_TAG, "SaveTabsTask deleteAllTabs()");
 
                 if (tabModelList != null) {
                     Context context = contextRef.get();
                     if (context != null) {
                         saveWebViewState(context, tabModelList);
+                        Log.i(TAB_MODEL_TAG, "SaveTabsTask saveWebViewState()");
                     }
 
                     tabsDatabase.tabDao().insertTabs(tabModelList);
+                    Log.i(TAB_MODEL_TAG, "SaveTabsTask insertTabs()");
                 }
             }
 

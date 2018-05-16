@@ -30,6 +30,7 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.content.pm.ShortcutManagerCompat;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
@@ -86,6 +87,8 @@ public class MainActivity extends LocaleAwareAppCompatActivity implements Fragme
         SharedPreferences.OnSharedPreferenceChangeListener,
         TabsSessionProvider.SessionHost, TabModelStore.AsyncQueryListener,
         TabRestoreMonitor, ScreenNavigator.Provider {
+
+    public static final String TAB_MODEL_TAG = "TabModel";
 
     private String pendingUrl;
 
@@ -908,20 +911,29 @@ public class MainActivity extends LocaleAwareAppCompatActivity implements Fragme
 
     @Override
     public void onQueryComplete(List<TabModel> tabModelList, String currentTabId) {
+        Log.i(TAB_MODEL_TAG, "onQueryComplete +, currentTabId: " + currentTabId
+                + ", tabSize: " + (tabModelList != null ? tabModelList.size() : 0)
+                + ", tabList: " + (tabModelList != null ? tabModelList.toString() : ""));
         isTabRestoredComplete = true;
-        getTabsSession().restoreTabs(tabModelList, currentTabId);
+        if (tabModelList != null) {
+            getTabsSession().restoreTabs(tabModelList, currentTabId);
+        }
         Tab currentTab = getTabsSession().getFocusTab();
         if (currentTab != null && safeForFragmentTransactions) {
             screenNavigator.restoreBrowserScreen(currentTab.getId());
         }
+        Log.i(TAB_MODEL_TAG, "onQueryComplete -");
     }
 
     private void restoreTabsFromPersistence() {
+        Log.i(TAB_MODEL_TAG, "restoreTabsFromPersistence +");
         isTabRestoredComplete = false;
         TabModelStore.getInstance(this).getSavedTabs(this, this);
+        Log.i(TAB_MODEL_TAG, "restoreTabsFromPersistence -");
     }
 
     private void saveTabsToPersistence() {
+        Log.i(TAB_MODEL_TAG, "saveTabsToPersistence +, isTabRestoredComplete: " + isTabRestoredComplete);
         if (!isTabRestoredComplete) {
             return;
         }
@@ -931,9 +943,14 @@ public class MainActivity extends LocaleAwareAppCompatActivity implements Fragme
                 ? getTabsSession().getFocusTab().getId()
                 : null;
 
+        Log.i(TAB_MODEL_TAG, "saveTabsToPersistence +, currentTabId: " + currentTabId
+                + ", tabSize: " + tabModelListForPersistence.size()
+                + ", tabList: " + tabModelListForPersistence.toString());
+
         if (tabModelListForPersistence != null) {
             TabModelStore.getInstance(this).saveTabs(this, tabModelListForPersistence, currentTabId, null);
         }
+        Log.i(TAB_MODEL_TAG, "saveTabsToPersistence -, isTabRestoredComplete: " + isTabRestoredComplete);
     }
 
     // a TabViewProvider and it should only be used in this activity
