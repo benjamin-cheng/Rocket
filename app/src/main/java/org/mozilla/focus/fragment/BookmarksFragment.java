@@ -52,17 +52,17 @@ public class BookmarksFragment extends PanelFragment implements BookmarkAdapter.
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        BookmarkViewModel.Factory factory = new BookmarkViewModel.Factory(
-                BookmarkRepository.getInstance(BookmarksDatabase.getInstance(getActivity())));
-
         LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
         adapter = new BookmarkAdapter(this);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setHasFixedSize(true);
 
+        BookmarkViewModel.Factory factory = new BookmarkViewModel.Factory(
+                BookmarkRepository.getInstance(BookmarksDatabase.getInstance(getActivity())));
         viewModel = ViewModelProviders.of(getActivity(), factory)
                 .get(BookmarkViewModel.class);
-        viewModel.getBookmarks().observe(this, bookmarks -> adapter.setData(bookmarks));
+        viewModel.getBookmarks().observe(this, pagedList -> adapter.submitList(pagedList));
 
         onStatus(VIEW_TYPE_NON_EMPTY);
     }

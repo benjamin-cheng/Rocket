@@ -223,6 +223,7 @@ dependencies {
     // Architecture components
     implementation "android.arch.lifecycle:extensions:${Versions.lifecycle}"
     implementation "android.arch.lifecycle:common-java8:${Versions.lifecycle}"
+    implementation "android.arch.paging:runtime:${Versions.paging}"
     implementation "android.arch.persistence.room:runtime:${Versions.room}"
     kapt "android.arch.persistence.room:compiler:${Versions.room}"
 

@@ -3,6 +3,8 @@ package org.mozilla.focus.viewmodel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.ViewModel;
 import android.arch.lifecycle.ViewModelProvider;
+import android.arch.paging.LivePagedListBuilder;
+import android.arch.paging.PagedList;
 import android.support.annotation.NonNull;
 
 import org.mozilla.focus.persistence.BookmarkModel;
@@ -12,16 +14,22 @@ import java.util.List;
 
 public class BookmarkViewModel extends ViewModel {
 
-    private final LiveData<List<BookmarkModel>> observableBookmarks;
+    private static final int PAGE_SIZE = 30;
+    private static final boolean ENABLE_PLACEHOLDERS = true;
+
+    private final LiveData<PagedList<BookmarkModel>> observableBookmarks;
 
     private BookmarkRepository bookmarkRepository;
 
     public BookmarkViewModel(@NonNull BookmarkRepository repository) {
         bookmarkRepository = repository;
-        observableBookmarks = repository.loadBookmarks();
+        observableBookmarks = new LivePagedListBuilder(bookmarkRepository.loadBookmarks(), new PagedList.Config.Builder()
+                .setPageSize(PAGE_SIZE)
+                .setEnablePlaceholders(ENABLE_PLACEHOLDERS)
+                .build()).build();
     }
 
-    public LiveData<List<BookmarkModel>> getBookmarks() {
+    public LiveData<PagedList<BookmarkModel>> getBookmarks() {
         return observableBookmarks;
     }
 

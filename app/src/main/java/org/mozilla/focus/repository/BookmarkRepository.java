@@ -1,6 +1,7 @@
 package org.mozilla.focus.repository;
 
 import android.arch.lifecycle.LiveData;
+import android.arch.paging.DataSource;
 
 import org.mozilla.focus.persistence.BookmarkModel;
 import org.mozilla.focus.persistence.BookmarksDatabase;
@@ -29,7 +30,7 @@ public class BookmarkRepository {
         return instance;
     }
 
-    public LiveData<List<BookmarkModel>> loadBookmarks() {
+    public DataSource.Factory<Integer, BookmarkModel> loadBookmarks() {
         return bookmarksDatabase.bookmarkDao().loadBookmarks();
     }
 

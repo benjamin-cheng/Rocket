@@ -12,6 +12,7 @@ object Versions {
     const val constraint = "1.1.2"
     const val arch_core = "1.1.1"
     const val lifecycle = "1.1.1"
+    const val paging = "1.0.0"
     const val room = "1.1.1"
     const val glide = "4.0.0"
     const val kotlin = "1.2.41"

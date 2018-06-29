@@ -1,6 +1,7 @@
 package org.mozilla.focus.persistence;
 
 import android.arch.lifecycle.LiveData;
+import android.arch.paging.DataSource;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
@@ -14,7 +15,7 @@ import java.util.List;
 public interface BookmarkDao {
 
     @Query("SELECT * FROM bookmarks")
-    LiveData<List<BookmarkModel>> loadBookmarks();
+    DataSource.Factory<Integer, BookmarkModel> loadBookmarks();
 
     @Query("SELECT * FROM bookmarks WHERE id = :id")
     LiveData<BookmarkModel> getBookmarkById(String id);

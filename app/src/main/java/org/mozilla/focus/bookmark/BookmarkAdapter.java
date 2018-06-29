@@ -1,26 +1,26 @@
 package org.mozilla.focus.bookmark;
 
+import android.arch.paging.PagedListAdapter;
 import android.support.annotation.NonNull;
+import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.PopupMenu;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import org.mozilla.focus.R;
-import org.mozilla.focus.fragment.PanelFragment;
 import org.mozilla.focus.fragment.PanelFragmentStatusListener;
 import org.mozilla.focus.persistence.BookmarkModel;
 import org.mozilla.focus.site.SiteItemViewHolder;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 
-import java.util.List;
+import java.util.Objects;
 
-public class BookmarkAdapter extends RecyclerView.Adapter<SiteItemViewHolder> {
-    private List<BookmarkModel> bookmarkModels;
+public class BookmarkAdapter extends PagedListAdapter<BookmarkModel, SiteItemViewHolder> {
     private BookmarkPanelListener listener;
 
     public BookmarkAdapter(BookmarkPanelListener listener) {
+        super(diffCallback);
         this.listener = listener;
     }
 
@@ -35,6 +35,9 @@ public class BookmarkAdapter extends RecyclerView.Adapter<SiteItemViewHolder> {
     public void onBindViewHolder(@NonNull SiteItemViewHolder holder, int position) {
         final BookmarkModel item = getItem(position);
         if (item == null) {
+            holder.rootView.setTag("");
+            holder.textMain.setText("");
+            holder.textSecondary.setText("");
             return;
         }
 
@@ -61,29 +64,6 @@ public class BookmarkAdapter extends RecyclerView.Adapter<SiteItemViewHolder> {
         });
     }
 
-    @Override
-    public int getItemCount() {
-        return (bookmarkModels != null ? bookmarkModels.size() : 0);
-    }
-
-    public void setData(List<BookmarkModel> bookmarkModels) {
-        this.bookmarkModels = bookmarkModels;
-        if (getItemCount() == 0) {
-            listener.onStatus(PanelFragment.VIEW_TYPE_EMPTY);
-        } else {
-            listener.onStatus(PanelFragment.VIEW_TYPE_NON_EMPTY);
-        }
-        notifyDataSetChanged();
-    }
-
-    private BookmarkModel getItem(int index) {
-        if (index >= 0 && bookmarkModels != null && bookmarkModels.size() > index) {
-            return bookmarkModels.get(index);
-        } else {
-            return null;
-        }
-    }
-
     public interface BookmarkPanelListener extends PanelFragmentStatusListener {
         void onItemClicked(String url);
 
@@ -91,4 +71,18 @@ public class BookmarkAdapter extends RecyclerView.Adapter<SiteItemViewHolder> {
 
         void onItemEdited(BookmarkModel bookmark);
     }
+
+    private static final DiffUtil.ItemCallback<BookmarkModel> diffCallback = new DiffUtil.ItemCallback<BookmarkModel>() {
+        @Override
+        public boolean areItemsTheSame(BookmarkModel oldItem, BookmarkModel newItem) {
+            return Objects.equals(oldItem.getId(), newItem.getId());
+        }
+
+        @Override
+        public boolean areContentsTheSame(BookmarkModel oldItem, BookmarkModel newItem) {
+            return Objects.equals(oldItem.getId(), newItem.getId())
+                    && Objects.equals(oldItem.getTitle(), newItem.getTitle())
+                    && Objects.equals(oldItem.getUrl(), newItem.getUrl());
+        }
+    };
 }
