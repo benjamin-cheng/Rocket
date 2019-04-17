@@ -19,12 +19,12 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.activity.EditBookmarkActivity;
 import org.mozilla.focus.activity.EditBookmarkActivityKt;
 import org.mozilla.focus.bookmark.BookmarkAdapter;
+import org.mozilla.focus.bookmark.BookmarkRepository;
+import org.mozilla.focus.bookmark.BookmarkViewModel;
 import org.mozilla.focus.navigation.ScreenNavigator;
 import org.mozilla.focus.persistence.BookmarkModel;
 import org.mozilla.focus.persistence.BookmarksDatabase;
-import org.mozilla.focus.repository.BookmarkRepository;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
-import org.mozilla.focus.viewmodel.BookmarkViewModel;
 
 import javax.annotation.Nonnull;
 

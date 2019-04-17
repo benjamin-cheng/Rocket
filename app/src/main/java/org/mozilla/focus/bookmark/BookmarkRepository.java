@@ -1,4 +1,4 @@
-package org.mozilla.focus.repository;
+package org.mozilla.focus.bookmark;
 
 import android.arch.lifecycle.LiveData;
 

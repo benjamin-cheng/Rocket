@@ -18,10 +18,10 @@ import android.widget.TextView
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_edit_bookmark.*
 import org.mozilla.focus.R
+import org.mozilla.focus.bookmark.BookmarkRepository
+import org.mozilla.focus.bookmark.BookmarkViewModel
 import org.mozilla.focus.persistence.BookmarkModel
 import org.mozilla.focus.persistence.BookmarksDatabase
-import org.mozilla.focus.repository.BookmarkRepository
-import org.mozilla.focus.viewmodel.BookmarkViewModel
 
 private const val SAVE_ACTION_ID = 1
 const val ITEM_UUID_KEY = "ITEM_UUID_KEY"
