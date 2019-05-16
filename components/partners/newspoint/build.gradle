@@ -1,6 +1,7 @@
 apply from: '../../../buildSrc/android-library-base.gradle'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlinx-serialization'
 apply plugin: 'com.android.library'
 apply from: "$rootProject.projectDir/buildSrc/pmd.gradle"
 apply from: "$rootProject.projectDir/buildSrc/checkstyle.gradle"
@@ -17,6 +18,7 @@ dependencies {
     compileOnly "com.google.code.findbugs:annotations:${Versions.findbugs}"
     androidTestImplementation "com.squareup.okhttp3:mockwebserver:${Versions.mockwebserver}"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin}"
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.11.0"
 }
 
 afterEvaluate {
