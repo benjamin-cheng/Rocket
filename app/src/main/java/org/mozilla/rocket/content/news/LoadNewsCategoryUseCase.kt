@@ -22,7 +22,8 @@ import android.support.v7.preference.PreferenceManager
 import org.mozilla.focus.R
 import org.mozilla.rocket.content.MediatorUseCase
 import org.mozilla.rocket.content.Result
-import org.mozilla.threadutils.ThreadUtils
+import org.mozilla.rocket.content.news.data.NewsCategory
+import org.mozilla.rocket.content.news.data.NewsSettingsRepository
 import java.util.Random
 import javax.inject.Inject
 
@@ -68,20 +69,29 @@ class FakeNewsCategoryRepository @Inject constructor(val context: Context) {
     }
 }
 
-open class LoadNewsCategoryUseCase @Inject constructor(private val repository: FakeNewsCategoryRepository) :
-
+open class LoadNewsCategoryUseCase @Inject constructor(private val repository: NewsSettingsRepository) :
     MediatorUseCase<LoadNewsCategoryByLangParameter, LoadNewsCategoryByLangResult>() {
     override fun execute(parameters: LoadNewsCategoryByLangParameter) {
-        // TODO: use coroutine when we have coroutineContext in androidx.core:core-ktx
-        ThreadUtils.postToBackgroundThread {
-            val newsCatsPref = repository.getNewsCatsPref()
-            if (newsCatsPref == null) {
+        val categoriesLiveData = repository.getCategoriesByLanguage(parameters.language)
+        result.addSource(categoriesLiveData) { newsCategories ->
+            result.removeSource(categoriesLiveData)
+            if (newsCategories == null) {
                 result.postValue(Result.Error(NewsCategoryNotFoundException()))
             } else {
-                val cats = LoadNewsCategoryByLangResult(newsCatsPref.toList())
+                val cats = LoadNewsCategoryByLangResult(newsCategories)
                 result.postValue(Result.Success(cats))
             }
         }
+//        // TODO: use coroutine when we have coroutineContext in androidx.core:core-ktx
+//        ThreadUtils.postToBackgroundThread {
+//            val newsCatsPref = repository.getNewsCatsPref()
+//            if (newsCatsPref == null) {
+//                result.postValue(Result.Error(NewsCategoryNotFoundException()))
+//            } else {
+//                val cats = LoadNewsCategoryByLangResult(newsCatsPref.toList())
+//                result.postValue(Result.Success(cats))
+//            }
+//        }
     }
 }
 
@@ -89,7 +99,7 @@ class NewsCategoryNotFoundException : Exception()
 
 data class LoadNewsCategoryByLangResult(
 
-    val categories: List<String>
+    val categories: List<NewsCategory>
 )
 
 data class LoadNewsCategoryByLangParameter(
