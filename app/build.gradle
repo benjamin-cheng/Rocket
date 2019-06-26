@@ -241,6 +241,9 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutine}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.coroutine}"
 
+    implementation 'com.google.firebase:firebase-ml-natural-language:20.0.0'
+    implementation 'com.google.firebase:firebase-ml-natural-language-translate-model:20.0.0'
+
     testImplementation "junit:junit:${Versions.junit}"
     testImplementation "org.robolectric:robolectric:${Versions.robolectric}"
     testImplementation "org.mockito:mockito-core:${Versions.mockito}"

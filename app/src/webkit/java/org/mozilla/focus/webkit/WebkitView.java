@@ -9,9 +9,9 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Message;
-import androidx.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
@@ -22,6 +22,13 @@ import android.webkit.WebSettings;
 import android.webkit.WebStorage;
 import android.webkit.WebView;
 import android.webkit.WebViewDatabase;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
 
 import org.mozilla.fileutils.FileUtils;
 import org.mozilla.focus.BuildConfig;
@@ -30,14 +37,20 @@ import org.mozilla.focus.history.model.Site;
 import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.web.WebViewProvider;
+import org.mozilla.httprequest.HttpRequest;
 import org.mozilla.rocket.tabs.SiteIdentity;
 import org.mozilla.rocket.tabs.TabChromeClient;
 import org.mozilla.rocket.tabs.TabView;
 import org.mozilla.rocket.tabs.TabViewClient;
 import org.mozilla.rocket.tabs.web.Download;
 import org.mozilla.rocket.tabs.web.DownloadCallback;
+import org.mozilla.rocket.translate.TranslateViewModel;
 import org.mozilla.threadutils.ThreadUtils;
 import org.mozilla.urlutils.UrlUtils;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.List;
 
 public class WebkitView extends NestedWebView implements TabView {
     private static final String KEY_CURRENTURL = "currenturl";
@@ -53,6 +66,8 @@ public class WebkitView extends NestedWebView implements TabView {
     private final ErrorPageDelegate errorPageDelegate;
 
     private WebViewDebugOverlay debugOverlay;
+
+    private final TranslateViewModel translateViewModel;
 
     public WebkitView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -85,6 +100,46 @@ public class WebkitView extends NestedWebView implements TabView {
         debugOverlay = WebViewDebugOverlay.create(context);
         debugOverlay.bindWebView(this);
         webViewClient.setDebugOverlay(debugOverlay);
+
+        translateViewModel = ViewModelProviders.of((FragmentActivity) getContext()).get(TranslateViewModel.class);
+        // Update sync toggle button states based on downloaded models list.
+        translateViewModel.availableModels.observe((FragmentActivity) getContext(), new Observer<List<String>>() {
+            @Override
+            public void onChanged(@Nullable List<String> firebaseTranslateRemoteModels) {
+                Log.d("WebkitView", "availableModels: " + firebaseTranslateRemoteModels.size());
+                translateViewModel.sourceLang.postValue(new TranslateViewModel.Language("en"));
+                translateViewModel.targetLang.postValue(new TranslateViewModel.Language("zh"));
+
+                //translateViewModel.sourceText.postValue("test test");
+                ThreadUtils.postToBackgroundThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            final String content = HttpRequest.get(new URL("https://www.wikipedia.org/"), "Android");
+                            translateViewModel.sourceText.postValue(content.substring(0, 102));
+                        } catch (MalformedURLException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                });
+            }
+        });
+        translateViewModel.translatedText.observe((FragmentActivity) getContext(), new Observer<TranslateViewModel.ResultOrError>() {
+            @Override
+            public void onChanged(TranslateViewModel.ResultOrError resultOrError) {
+                if (resultOrError.error != null) {
+                    Toast.makeText(getContext(), resultOrError.error.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                } else {
+                    Log.d("WebkitView", "result: " + resultOrError.result);
+                    loadDataWithBaseURL("https://www.wikipedia.org/", resultOrError.result, "text/html", "UTF-8", null);
+                }
+            }
+        });
+        ThreadUtils.postToBackgroundThread(() -> {
+            translateViewModel.downloadLanguage(new TranslateViewModel.Language("en"));
+            translateViewModel.downloadLanguage(new TranslateViewModel.Language("zh"));
+        });
     }
 
     @Override

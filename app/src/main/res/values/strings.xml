@@ -648,4 +648,6 @@
 
     <!-- Name of low priority notification channel, this will be shown on the app info page in the system setting -->
     <string name="low_priority_notification_channel">Hidden notifications</string>
+
+    <string name="unknown_error">Unknown error occurred.</string>
 </resources>
