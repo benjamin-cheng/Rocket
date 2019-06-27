@@ -287,6 +287,14 @@
             android:name="org.mozilla.rocket.nightmode.AdjustBrightnessDialog"
             android:theme="@style/TransparentTheme"
             android:exported="false" />
+
+        <service
+            android:name="org.mozilla.rocket.customtabs.CustomTabsService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.support.customtabs.action.CustomTabsService" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>
