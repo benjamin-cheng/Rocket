@@ -1,7 +1,9 @@
 package org.mozilla.rocket.content.news
 
 import android.content.Context
+import android.net.Uri
 import android.os.Bundle
+import android.support.customtabs.CustomTabsIntent
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -16,7 +18,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.mozilla.focus.R
-import org.mozilla.focus.navigation.ScreenNavigator
 import org.mozilla.focus.utils.Settings
 import org.mozilla.lite.partner.NewsItem
 import org.mozilla.rocket.content.ContentPortalViewState
@@ -28,7 +29,9 @@ import org.mozilla.rocket.content.news.data.NewsSettingsRepository
 import org.mozilla.rocket.content.news.data.NewsSourceManager
 import org.mozilla.rocket.content.portal.ContentFeature
 import org.mozilla.rocket.content.portal.ContentPortalListener
+import org.mozilla.rocket.customtabs.CustomTabsHelper
 import org.mozilla.rocket.widget.BottomSheetBehavior
+
 
 class NewsFragment : DaggerFragment(), ContentPortalListener, NewsViewContract {
 
@@ -157,7 +160,12 @@ class NewsFragment : DaggerFragment(), ContentPortalListener, NewsViewContract {
     }
 
     override fun onItemClicked(url: String) {
-        ScreenNavigator.get(context).showBrowserScreen(url, true, false)
+        //ScreenNavigator.get(context).showBrowserScreen(url, true, false)
+        val builder = CustomTabsIntent.Builder()
+        val customTabsIntent = builder.build()
+        val packageName = CustomTabsHelper.getPackageNameToUse(context)
+        customTabsIntent.intent.setPackage(packageName)
+        customTabsIntent.launchUrl(context, Uri.parse(url))
 
         // use findFirstVisibleItemPosition so we don't need to remember offset
         newsListLayoutManager?.findFirstVisibleItemPosition()?.let {
