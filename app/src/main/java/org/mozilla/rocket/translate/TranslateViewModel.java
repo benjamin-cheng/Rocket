@@ -151,6 +151,24 @@ public class TranslateViewModel extends AndroidViewModel {
         });
     }
 
+    public Task<String> translate(String text) {
+        final Language source = sourceLang.getValue();
+        final Language target = targetLang.getValue();
+        if (source == null || target == null || text == null || text.isEmpty()) {
+            return Tasks.forResult("");
+        }
+        int sourceLangCode = FirebaseTranslateLanguage.languageForLanguageCode(source.getCode());
+        int targetLangCode = FirebaseTranslateLanguage.languageForLanguageCode(target.getCode());
+        FirebaseTranslatorOptions options = new FirebaseTranslatorOptions.Builder()
+                .setSourceLanguage(sourceLangCode)
+                .setTargetLanguage(targetLangCode)
+                .build();
+        final FirebaseTranslator translator =
+                FirebaseNaturalLanguage.getInstance().getTranslator(options);
+
+        return translator.translate(text);
+    }
+
     public Task<String> translate() {
         final TaskCompletionSource<String> translateTask = new TaskCompletionSource<String>();
         final String text = sourceText.getValue();

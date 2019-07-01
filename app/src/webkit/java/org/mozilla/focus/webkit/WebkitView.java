@@ -30,6 +30,15 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
+import org.jsoup.select.Elements;
 import org.mozilla.fileutils.FileUtils;
 import org.mozilla.focus.BuildConfig;
 import org.mozilla.focus.history.BrowsingHistoryManager;
@@ -116,7 +125,30 @@ public class WebkitView extends NestedWebView implements TabView {
                     public void run() {
                         try {
                             final String content = HttpRequest.get(new URL("https://www.wikipedia.org/"), "Android");
-                            translateViewModel.sourceText.postValue(content.substring(0, 102));
+
+                            StringBuilder buffer = new StringBuilder();
+                            Document doc = Jsoup.parse(content);
+                            Elements els = doc.body().getAllElements();
+                            for (Element e : els) {
+                                for (Node child : e.childNodes()) {
+                                    if (child instanceof TextNode && !((TextNode) child).isBlank()) {
+                                        //((TextNode)child).text(((TextNode)child).text().replaceAll("changeme","<changed>changeme</changed>"));
+                                        buffer.append(((TextNode) child).text()).append("\n");
+                                        translateViewModel.translate(((TextNode) child).text()).addOnCompleteListener(new OnCompleteListener<String>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<String> task) {
+                                                if (task.isSuccessful()) {
+                                                    Log.d("WebkitView", "text: " + ((TextNode) child).text() + " => " + task.getResult());
+                                                } else {
+                                                    Log.d("WebkitView", "text: " + ((TextNode) child).text() + " => no result");
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+
+                            translateViewModel.sourceText.postValue(buffer.toString()/*content.substring(0, 102)*/);
                         } catch (MalformedURLException e) {
                             e.printStackTrace();
                         }
