@@ -112,65 +112,118 @@ public class WebkitView extends NestedWebView implements TabView {
 
         translateViewModel = ViewModelProviders.of((FragmentActivity) getContext()).get(TranslateViewModel.class);
         // Update sync toggle button states based on downloaded models list.
-        translateViewModel.availableModels.observe((FragmentActivity) getContext(), new Observer<List<String>>() {
+        translateViewModel.getAvailableModels().observe((FragmentActivity) getContext(), new Observer<List<String>>() {
             @Override
             public void onChanged(@Nullable List<String> firebaseTranslateRemoteModels) {
                 Log.d("WebkitView", "availableModels: " + firebaseTranslateRemoteModels.size());
-                translateViewModel.sourceLang.postValue(new TranslateViewModel.Language("en"));
-                translateViewModel.targetLang.postValue(new TranslateViewModel.Language("zh"));
-
-                //translateViewModel.sourceText.postValue("test test");
-                ThreadUtils.postToBackgroundThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            final String content = HttpRequest.get(new URL("https://www.wikipedia.org/"), "Android");
-
-                            StringBuilder buffer = new StringBuilder();
-                            Document doc = Jsoup.parse(content);
-                            Elements els = doc.body().getAllElements();
-                            for (Element e : els) {
-                                for (Node child : e.childNodes()) {
-                                    if (child instanceof TextNode && !((TextNode) child).isBlank()) {
-                                        //((TextNode)child).text(((TextNode)child).text().replaceAll("changeme","<changed>changeme</changed>"));
-                                        buffer.append(((TextNode) child).text()).append("\n");
-                                        translateViewModel.translate(((TextNode) child).text()).addOnCompleteListener(new OnCompleteListener<String>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<String> task) {
-                                                if (task.isSuccessful()) {
-                                                    Log.d("WebkitView", "text: " + ((TextNode) child).text() + " => " + task.getResult());
-                                                } else {
-                                                    Log.d("WebkitView", "text: " + ((TextNode) child).text() + " => no result");
-                                                }
-                                            }
-                                        });
-                                    }
-                                }
-                            }
-
-                            translateViewModel.sourceText.postValue(buffer.toString()/*content.substring(0, 102)*/);
-                        } catch (MalformedURLException e) {
-                            e.printStackTrace();
-                        }
-
-                    }
-                });
+//                translateViewModel.getSourceLang().postValue(new TranslateViewModel.Language("en"));
+//                translateViewModel.getTargetLang().postValue(new TranslateViewModel.Language("zh"));
+//
+//                //translateViewModel.sourceText.postValue("test test");
+//                ThreadUtils.postToBackgroundThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        try {
+//                            final String content = HttpRequest.get(new URL("https://www.wikipedia.org/"), "Android");
+//
+//                            //StringBuilder buffer = new StringBuilder();
+//                            Document doc = Jsoup.parse(content);
+//                            Elements els = doc.body().getAllElements();
+//                            for (Element e : els) {
+//                                for (Node child : e.childNodes()) {
+//                                    if (child instanceof TextNode && !((TextNode) child).isBlank()) {
+//                                        //((TextNode)child).text(((TextNode)child).text().replaceAll("changeme","<changed>changeme</changed>"));
+//                                        //buffer.append(((TextNode) child).text()).append("\n");
+//                                        translateViewModel.translate(((TextNode) child).text()).addOnCompleteListener(new OnCompleteListener<String>() {
+//                                            @Override
+//                                            public void onComplete(@NonNull Task<String> task) {
+//                                                if (task.isSuccessful()) {
+//                                                    Log.d("WebkitView", "text: " + ((TextNode) child).text() + " => " + task.getResult());
+//                                                    ((TextNode) child).text(task.getResult());
+//                                                } else {
+//                                                    Log.d("WebkitView", "text: " + ((TextNode) child).text() + " => no result");
+//                                                }
+//                                            }
+//                                        });
+//                                    }
+//                                }
+//                            }
+//
+//                            //translateViewModel.getSourceText().postValue(buffer.toString()/*content.substring(0, 102)*/);
+//                            ThreadUtils.postToMainThreadDelayed(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    loadDataWithBaseURL("https://www.wikipedia.org/", doc.toString(), "text/html", "UTF-8", null);
+//                                }
+//                            }, 5000);
+//                        } catch (MalformedURLException e) {
+//                            e.printStackTrace();
+//                        }
+//
+//                    }
+//                });
             }
         });
-        translateViewModel.translatedText.observe((FragmentActivity) getContext(), new Observer<TranslateViewModel.ResultOrError>() {
+        translateViewModel.getTranslatedText().observe((FragmentActivity) getContext(), new Observer<TranslateViewModel.ResultOrError>() {
             @Override
             public void onChanged(TranslateViewModel.ResultOrError resultOrError) {
-                if (resultOrError.error != null) {
-                    Toast.makeText(getContext(), resultOrError.error.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                if (resultOrError.getError() != null) {
+                    Toast.makeText(getContext(), resultOrError.getError().getLocalizedMessage(), Toast.LENGTH_LONG).show();
                 } else {
-                    Log.d("WebkitView", "result: " + resultOrError.result);
-                    loadDataWithBaseURL("https://www.wikipedia.org/", resultOrError.result, "text/html", "UTF-8", null);
+                    Log.d("WebkitView", "result: " + resultOrError.getResult());
+                    //loadDataWithBaseURL("https://www.wikipedia.org/", resultOrError.getResult(), "text/html", "UTF-8", null);
                 }
             }
         });
         ThreadUtils.postToBackgroundThread(() -> {
             translateViewModel.downloadLanguage(new TranslateViewModel.Language("en"));
             translateViewModel.downloadLanguage(new TranslateViewModel.Language("zh"));
+        });
+
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                translateViewModel.getSourceLang().postValue(new TranslateViewModel.Language("en"));
+                translateViewModel.getTargetLang().postValue(new TranslateViewModel.Language("zh"));
+
+                try {
+                    final String content = HttpRequest.get(new URL("https://www.wikipedia.org/"), "Android");
+
+                    //StringBuilder buffer = new StringBuilder();
+                    Document doc = Jsoup.parse(content);
+                    Elements els = doc.body().getAllElements();
+                    for (Element e : els) {
+                        for (Node child : e.childNodes()) {
+                            if (child instanceof TextNode && !((TextNode) child).isBlank()) {
+                                //((TextNode)child).text(((TextNode)child).text().replaceAll("changeme","<changed>changeme</changed>"));
+                                //buffer.append(((TextNode) child).text()).append("\n");
+                                translateViewModel.translate(((TextNode) child).text()).addOnCompleteListener(new OnCompleteListener<String>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<String> task) {
+                                        if (task.isSuccessful()) {
+                                            Log.d("WebkitView", "text: " + ((TextNode) child).text() + " => " + task.getResult());
+                                            ((TextNode) child).text(task.getResult());
+                                        } else {
+                                            Log.d("WebkitView", "text: " + ((TextNode) child).text() + " => no result");
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    }
+
+                    //translateViewModel.getSourceText().postValue(buffer.toString()/*content.substring(0, 102)*/);
+                    ThreadUtils.postToMainThreadDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            loadDataWithBaseURL("https://www.wikipedia.org/", doc.toString(), "text/html", "UTF-8", null);
+                        }
+                    }, 10000);
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+
+            }
         });
     }
 
