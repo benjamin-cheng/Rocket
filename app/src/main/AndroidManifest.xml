@@ -3,7 +3,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:tools="http://schemas.android.com/tools"
           package="org.mozilla.focus">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -94,6 +93,19 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".activity.ShoppingActivity"
+            android:exported="true"
+            android:label="Shopping"
+            android:launchMode="singleTask"
+            android:taskAffinity=".lifefeed.shopping" />
+
+        <activity android:name=".activity.GameActivity"
+            android:exported="true"
+            android:label="Game"
+            android:launchMode="singleTask"
+            android:taskAffinity=".lifefeed.game" />
 
         <activity
             android:name="org.mozilla.rocket.privately.PrivateModeActivity"

@@ -47,6 +47,8 @@ import com.bumptech.glide.Glide;
 
 import org.mozilla.focus.BuildConfig;
 import org.mozilla.focus.R;
+import org.mozilla.focus.activity.GameActivity;
+import org.mozilla.focus.activity.ShoppingActivity;
 import org.mozilla.focus.navigation.ScreenNavigator;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.Settings;
@@ -214,12 +216,14 @@ public class TabTrayFragment extends DialogFragment implements TabTrayContract.V
                 break;
 
             case R.id.close_all_tabs_btn:
-                onCloseAllTabsClicked();
+                //onCloseAllTabsClicked();
+                startActivity(new Intent(getContext(), GameActivity.class));
+                getActivity().overridePendingTransition(R.anim.pb_enter, R.anim.pb_exit);
                 break;
 
             case R.id.btn_private_browsing:
                 TelemetryWrapper.privateModeTray();
-                startActivity(new Intent(getContext(), PrivateModeActivity.class));
+                startActivity(new Intent(getContext(), ShoppingActivity.class));
                 getActivity().overridePendingTransition(R.anim.pb_enter, R.anim.pb_exit);
                 break;
 
