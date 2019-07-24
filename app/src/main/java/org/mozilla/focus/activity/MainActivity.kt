@@ -25,6 +25,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
@@ -66,6 +67,7 @@ import org.mozilla.rocket.chrome.ChromeViewModel.OpenUrlAction
 import org.mozilla.rocket.component.LaunchIntentDispatcher
 import org.mozilla.rocket.component.PrivateSessionNotificationService
 import org.mozilla.rocket.content.ContentPortalViewState
+import org.mozilla.rocket.content.base.view.ContentTabActivity
 import org.mozilla.rocket.download.DownloadIndicatorViewModel
 import org.mozilla.rocket.extension.nonNullObserve
 import org.mozilla.rocket.landing.DialogQueue
@@ -288,7 +290,11 @@ class MainActivity : BaseActivity(),
             }
             driveDefaultBrowser.observe(this@MainActivity, Observer { driveDefaultBrowser() })
             exitApp.observe(this@MainActivity, Observer { exitApp() })
-            openPreference.observe(this@MainActivity, Observer { openPreferences() })
+            openPreference.observe(this@MainActivity, Observer {
+                /*openPreferences()*/
+                val intent = Intent(this@MainActivity, ContentTabActivity::class.java)
+                ContextCompat.startActivity(this@MainActivity, intent, null)
+            })
             showBookmarks.observe(this@MainActivity, Observer { showListPanel(ListPanelDialog.TYPE_BOOKMARKS) })
             showHistory.observe(this@MainActivity, Observer { showListPanel(ListPanelDialog.TYPE_HISTORY) })
             showScreenshots.observe(this@MainActivity, Observer { showListPanel(ListPanelDialog.TYPE_SCREENSHOTS) })
