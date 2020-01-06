@@ -6,7 +6,8 @@ data class NewsCategory(
     val categoryId: String,
     val stringResourceId: Int,
     val order: Int,
-    var isSelected: Boolean = false
+    var isSelected: Boolean = false,
+    val name: String = ""
 ) {
     companion object {
         private val mapping by lazy {

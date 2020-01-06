@@ -1,8 +1,9 @@
 package org.mozilla.rocket.content.news.data
 
 import android.content.Context
-import org.mozilla.rocket.content.news.data.newspoint.NewsPointSettingsLocalDataSource
-import org.mozilla.rocket.content.news.data.newspoint.NewsPointSettingsRemoteDataSource
+import org.mozilla.rocket.content.news.data.dailyhunt.DailyHuntProvider
+import org.mozilla.rocket.content.news.data.dailyhunt.DailyHuntSettingsLocalDataSource
+import org.mozilla.rocket.content.news.data.dailyhunt.DailyHuntSettingsRemoteDataSource
 import org.mozilla.rocket.content.news.data.rss.RssSettingsLocalDataSource
 import org.mozilla.rocket.content.news.data.rss.RssSettingsRemoteDataSource
 
@@ -12,7 +13,7 @@ class NewsSettingsRepositoryProvider(private val appContext: Context) {
         if (repository == null) {
             val newsProvider = NewsProvider.getNewsProvider()
             repository = if (newsProvider?.isNewsPoint() == true) {
-                NewsSettingsRepository(NewsPointSettingsRemoteDataSource(newsProvider), NewsPointSettingsLocalDataSource(appContext))
+                NewsSettingsRepository(DailyHuntSettingsRemoteDataSource(DailyHuntProvider.getProvider()), DailyHuntSettingsLocalDataSource(appContext))
             } else {
                 NewsSettingsRepository(RssSettingsRemoteDataSource(newsProvider), RssSettingsLocalDataSource(appContext))
             }
