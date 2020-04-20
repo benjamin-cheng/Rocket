@@ -5,6 +5,7 @@ import androidx.paging.DataSource
 import org.mozilla.rocket.content.news.data.dailyhunt.DailyHuntNewsRemoteDataSource
 import org.mozilla.rocket.content.news.data.dailyhunt.DailyHuntProvider
 import org.mozilla.rocket.content.news.data.newspoint.NewsPointNewsRemoteDataSource
+import org.mozilla.rocket.content.news.data.rss.RssNewsRemoteDataSource
 
 class NewsDataSourceFactory(
     private val appContext: Context
@@ -23,8 +24,7 @@ class NewsDataSourceFactory(
                 NewsPointNewsRemoteDataSource(NewsProvider.getNewsProvider(), category, language)
             }
         } else {
-            TODO("support other sources")
-//            NewsRepository(RssNewsRemoteDataSource(newsProvider))
+            RssNewsRemoteDataSource(newsProvider, category)
         }
     }
 }
