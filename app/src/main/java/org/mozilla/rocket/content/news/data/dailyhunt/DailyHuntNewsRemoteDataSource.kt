@@ -189,6 +189,8 @@ class DailyHuntNewsRemoteDataSource(
     private fun fromJson(jsonString: String): List<NewsItem> {
         val jsonObject = jsonString.toJsonObject()
         val newsArray = jsonObject.optJSONObject("data").optJSONArray("rows")
+        val trackingUrl = jsonObject.optJSONObject("data")?.optString("trackUrl") ?: ""
+        val attributionUrl = jsonObject.optJSONObject("track")?.optJSONArray("comscoreUrls")?.optString(0) ?: ""
         val targetImageDimension = appContext.resources.getDimensionPixelSize(R.dimen.item_news_inner_width).toString()
         return (0 until newsArray.length())
             .map { index ->
@@ -219,7 +221,11 @@ class DailyHuntNewsRemoteDataSource(
                     item.optString("source"),
                     item.optLong("publishTime"),
                     linkUrl.sha256(),
-                    feed = "dailyhunt"
+                    feed = "dailyhunt",
+                    trackingUrl = trackingUrl,
+                    trackingId = item.optString("id"),
+                    trackingData = item.optString("trackData"),
+                    attributionUrl = attributionUrl
                 )
             }
     }
