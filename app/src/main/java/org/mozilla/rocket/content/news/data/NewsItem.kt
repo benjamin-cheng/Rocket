@@ -8,7 +8,10 @@ data class NewsItem(
     val publishTime: Long,
     val componentId: String,
     val subCategoryId: String = DEFAULT_SUB_CATEGORY_ID,
-    val feed: String = ""
+    val feed: String = "",
+    val trackingId: String = "",
+    val trackingData: String = "",
+    val attributionUrl: String = ""
 ) {
     companion object {
         const val DEFAULT_SUB_CATEGORY_ID = "99"
