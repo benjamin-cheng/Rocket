@@ -1,4 +1,4 @@
-package org.mozilla.rocket.content.news.data.newspoint
+package org.mozilla.rocket.content.news.data.dailyhunt
 
 data class NewsTrackingData(
     val viewedDate: Long,

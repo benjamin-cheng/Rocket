@@ -2,9 +2,12 @@ package org.mozilla.rocket.content.news.data.dailyhunt
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.paging.PageKeyedDataSource
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
+import org.json.JSONArray
+import org.json.JSONObject
 import org.mozilla.focus.R
 import org.mozilla.rocket.content.Result
 import org.mozilla.rocket.content.news.data.NewsDataSourceFactory.PageKey
@@ -72,6 +75,8 @@ class DailyHuntNewsRemoteDataSource(
                 val body = it.body.string()
                 val nextPageKey = PageKey.PageUrlKey(parseNextPageUrl(body))
                 val items = fromJson(body)
+                trackItemsShown(newsProvider, items)
+                trackAttribution(items[0].attributionUrl)
                 Result.Success(nextPageKey to items)
             },
             onError = {
@@ -100,6 +105,84 @@ class DailyHuntNewsRemoteDataSource(
                 Result.Error(it)
             }
         )
+    }
+
+    private fun trackItemsShown(newsProvider: DailyHuntProvider?, items: List<NewsItem>) {
+        val params = parseUrlParams(items[0].trackingUrl).toMutableMap().apply {
+            put("partner", newsProvider?.partnerCode ?: "")
+            put("puid", newsProvider?.userId ?: "")
+            put("ts", System.currentTimeMillis().toString())
+        }
+        sendHttpRequest(
+            request = Request(
+                url = getTrackingApiEndpoint(params),
+                method = Request.Method.POST,
+                headers = createTrackingApiHeaders(params),
+                body = Request.Body.fromString(createTrackingBody(items))
+            ),
+            onSuccess = {
+                val body = it.body.string()
+                Log.d("DailyHunt", "trackItemsShown - success: $body")
+            },
+            onError = {
+                Log.d("DailyHunt", "trackItemsShown - error: ${it.message}")
+            }
+        )
+    }
+
+    private fun trackAttribution(attributionUrl: String) {
+        sendHttpRequest(
+            request = Request(
+                url = attributionUrl,
+                method = Request.Method.GET
+            ),
+            onSuccess = {
+                val body = it.body.string()
+                Log.d("DailyHunt", "trackAttribution - success: $body")
+            },
+            onError = {
+                Log.d("DailyHunt", "trackAttribution - error: ${it.message}")
+            }
+        )
+    }
+
+    private fun getTrackingApiEndpoint(params: Map<String, String>): String = Uri.parse(TRACKING_API_URL)
+        .buildUpon()
+        .apply {
+            for ((key, value) in params.entries) {
+                appendQueryParameter(key, value)
+            }
+        }
+        .build()
+        .toString()
+
+    private fun createTrackingApiHeaders(params: Map<String, String>) = MutableHeaders().apply {
+        set("Content-Type", "application/json")
+
+        newsProvider?.apiKey?.let {
+            set("Authorization", it)
+        }
+
+        newsProvider?.secretKey?.let {
+            val signature = DailyHuntUtils.generateSignature(it, Request.Method.POST.name, urlEncodeParams(params))
+            set("Signature", signature)
+        }
+    }
+
+    private fun createTrackingBody(items: List<NewsItem>): String {
+        val json = JSONObject()
+        json.put("viewedDate", System.currentTimeMillis().toString())
+
+        val jsonArray = JSONArray()
+        for (item in items) {
+            jsonArray.put(
+                JSONObject()
+                    .put("id", item.trackingId)
+                    .put("trackData", item.trackingData)
+            )
+        }
+        json.put("stories", jsonArray)
+        return json.toString()
     }
 
     private fun createApiParams(
@@ -175,6 +258,7 @@ class DailyHuntNewsRemoteDataSource(
     private fun fromJson(jsonString: String): List<NewsItem> {
         val jsonObject = jsonString.toJsonObject()
         val newsArray = jsonObject.optJSONObject("data").optJSONArray("rows")
+        val trackingUrl = jsonObject.optJSONObject("data")?.optString("trackUrl") ?: ""
         val attributionUrl = jsonObject.optJSONObject("track")?.optJSONArray("comscoreUrls")?.optString(0) ?: ""
         val targetImageDimension = appContext.resources.getDimensionPixelSize(R.dimen.item_news_inner_width).toString()
         return (0 until newsArray.length())
@@ -207,6 +291,7 @@ class DailyHuntNewsRemoteDataSource(
                     item.optLong("publishTime"),
                     linkUrl.sha256(),
                     feed = "dailyhunt",
+                    trackingUrl = trackingUrl,
                     trackingId = item.optString("id"),
                     trackingData = item.optString("trackData"),
                     attributionUrl = attributionUrl
@@ -216,5 +301,6 @@ class DailyHuntNewsRemoteDataSource(
 
     companion object {
         private const val API_URL = "http://feed.dailyhunt.in/api/v2/syndication/items"
+        private const val TRACKING_API_URL = "http://track.dailyhunt.in/api/v2/syndication/tracking"
     }
 }

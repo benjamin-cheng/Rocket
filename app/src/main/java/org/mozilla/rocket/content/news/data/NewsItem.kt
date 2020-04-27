@@ -9,6 +9,7 @@ data class NewsItem(
     val componentId: String,
     val subCategoryId: String = DEFAULT_SUB_CATEGORY_ID,
     val feed: String = "",
+    val trackingUrl: String = "",
     val trackingId: String = "",
     val trackingData: String = "",
     val attributionUrl: String = ""

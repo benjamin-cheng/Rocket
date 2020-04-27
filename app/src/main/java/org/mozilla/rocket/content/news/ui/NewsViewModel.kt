@@ -52,6 +52,10 @@ class NewsViewModel(
         event.value = NewsAction.OpenLink(newsItem.link, telemetryData)
     }
 
+//    fun onNewsItemsShown(lastNewsItem: NewsUiModel) {
+//
+//    }
+
     private fun initialize(category: String, language: String) {
         val loadNewsParameter = LoadNewsParameter(category, language, DEFAULT_PAGE_SIZE)
         categoryParameterMap[category] = loadNewsParameter
