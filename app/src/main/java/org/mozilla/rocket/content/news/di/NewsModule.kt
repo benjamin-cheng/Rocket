@@ -6,6 +6,7 @@ import dagger.Provides
 import org.mozilla.rocket.content.news.data.NewsDataSourceFactory
 import org.mozilla.rocket.content.news.data.NewsRepository
 import org.mozilla.rocket.content.news.data.NewsSettingsRepositoryProvider
+import org.mozilla.rocket.content.news.data.NewsTrackingRepositoryProvider
 import org.mozilla.rocket.content.news.domain.GetAdditionalSourceInfoUseCase
 import org.mozilla.rocket.content.news.domain.HasUserEnabledPersonalizedNewsUseCase
 import org.mozilla.rocket.content.news.domain.LoadNewsLanguagesUseCase
@@ -182,4 +183,9 @@ object NewsModule {
     @Provides
     fun provideNewsSettingsRepositoryProvider(context: Context): NewsSettingsRepositoryProvider =
         NewsSettingsRepositoryProvider(context)
+
+    @JvmStatic
+    @Provides
+    fun provideNewsTrackingRepositoryProvider(context: Context): NewsTrackingRepositoryProvider =
+        NewsTrackingRepositoryProvider(context)
 }
