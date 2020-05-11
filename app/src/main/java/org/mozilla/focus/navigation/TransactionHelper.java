@@ -30,7 +30,7 @@ import static org.mozilla.focus.navigation.ScreenNavigator.URL_INPUT_FRAGMENT_TA
 class TransactionHelper implements DefaultLifecycleObserver {
     private final ScreenNavigator.HostActivity activity;
     private BackStackListener backStackListener;
-    private MutableLiveData<String> topFragmentState = new MutableLiveData<>();
+    private MutableLiveData<TopFragmentState> topFragmentState = new MutableLiveData<>();
 
     private static final String ENTRY_TAG_SEPARATOR = "#";
 
@@ -149,7 +149,7 @@ class TransactionHelper implements DefaultLifecycleObserver {
         return manager.findFragmentByTag(tag);
     }
 
-    LiveData<String> getTopFragmentState() {
+    LiveData<TopFragmentState> getTopFragmentState() {
         return topFragmentState;
     }
 
@@ -228,8 +228,8 @@ class TransactionHelper implements DefaultLifecycleObserver {
         return manager == null || manager.isStateSaved();
     }
 
-    private void onFragmentBroughtToFront(String fragmentTag) {
-        topFragmentState.setValue(fragmentTag);
+    private void onFragmentBroughtToFront(String fragmentTag, String parentFragmentTag) {
+        topFragmentState.setValue(new TopFragmentState(fragmentTag, parentFragmentTag));
     }
 
     private void registerBackStackListener() {
@@ -347,7 +347,12 @@ class TransactionHelper implements DefaultLifecycleObserver {
                 FragmentManager.BackStackEntry entry = manager.getBackStackEntryAt(entryCount - 1);
                 fragmentTag = helper.getEntryTag(entry);
             }
-            helper.onFragmentBroughtToFront(fragmentTag);
+            String parentFragmentTag = "";
+            if (entryCount > 1) {
+                FragmentManager.BackStackEntry entry = manager.getBackStackEntryAt(entryCount - 2);
+                parentFragmentTag = helper.getEntryTag(entry);
+            }
+            helper.onFragmentBroughtToFront(fragmentTag, parentFragmentTag);
         }
 
         @Nullable
@@ -381,6 +386,16 @@ class TransactionHelper implements DefaultLifecycleObserver {
 
         @IntDef({TYPE_ROOT, TYPE_ATTACHED, TYPE_FLOATING})
         @interface EntryType {
+        }
+    }
+
+    public static class TopFragmentState {
+        public String topFragmentTag;
+        public String parentFragmentTag;
+
+        public TopFragmentState(String topFragmentTag, String parentFragmentTag) {
+            this.topFragmentTag = topFragmentTag;
+            this.parentFragmentTag = parentFragmentTag;
         }
     }
 }

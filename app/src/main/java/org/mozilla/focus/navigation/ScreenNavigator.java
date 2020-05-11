@@ -217,7 +217,7 @@ public class ScreenNavigator implements DefaultLifecycleObserver {
 
     public LiveData<NavigationState> getNavigationState() {
         return Transformations.map(transactionHelper.getTopFragmentState(),
-                fragmentTag -> new NavigationState(fragmentTag.isEmpty() ? BROWSER_FRAGMENT_TAG : fragmentTag));
+                topFragmentState -> new NavigationState(topFragmentState.topFragmentTag.isEmpty() ? BROWSER_FRAGMENT_TAG : topFragmentState.topFragmentTag + topFragmentState.parentFragmentTag));
     }
 
     private void logMethod(Object... args) {
@@ -332,6 +332,10 @@ public class ScreenNavigator implements DefaultLifecycleObserver {
 
         public boolean isBrowser() {
             return this.tag.equals(BROWSER_FRAGMENT_TAG);
+        }
+
+        public boolean isBrowserUrlInput() {
+            return this.tag.equals(URL_INPUT_FRAGMENT_TAG);
         }
 
         @Override
