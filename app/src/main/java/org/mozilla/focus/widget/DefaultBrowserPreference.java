@@ -94,19 +94,19 @@ public class DefaultBrowserPreference extends Preference {
 
     private void init() {
         if (action == null) {
-            action = ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.M))
+            action = /*((Build.VERSION.SDK_INT >= Build.VERSION_CODES.M))
                     ? new DefaultAction(this)
-                    : new LowSdkAction(this);
+                    : */new LowSdkAction(this);
 
         }
     }
 
-    private void openAppDetailSettings(Context context) {
+    private void openAppDetailSettings(Context context, String packageName) {
         //  TODO: extract this to util module
         Intent intent = new Intent();
         intent.setAction(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
         //  fromParts might be faster than parse: ex. Uri.parse("package://"+context.getPackageName());
-        Uri uri = Uri.fromParts("package", context.getPackageName(), null);
+        Uri uri = Uri.fromParts("package", packageName, null);
         intent.setData(uri);
         context.startActivity(intent);
     }
@@ -182,11 +182,15 @@ public class DefaultBrowserPreference extends Preference {
             final boolean hasDefaultBrowser = Browsers.hasDefaultBrowser(context);
 
             if (isDefaultBrowser) {
-                pref.openAppDetailSettings(context);
+                if (!IntentUtils.openDefaultAppsSettings(pref.getContext())) {
+                    pref.openSumoPage(pref.getContext());
+                }
             } else if (hasDefaultBrowser) {
-                pref.setEnabled(false);
-                pref.setSummary(R.string.preference_default_browser_is_setting);
-                pref.clearDefaultBrowser(context);
+                final String defaultBrowserPackageName = Browsers.getDefaultBrowserPackageName(context);
+                pref.openAppDetailSettings(context, defaultBrowserPackageName);
+//                pref.setEnabled(false);
+//                pref.setSummary(R.string.preference_default_browser_is_setting);
+//                pref.clearDefaultBrowser(context);
             } else {
                 pref.triggerWebOpen();
             }

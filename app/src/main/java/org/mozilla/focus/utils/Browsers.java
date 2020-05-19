@@ -231,6 +231,11 @@ public class Browsers {
         return (browser.defaultBrowser != null);
     }
 
+    public static String getDefaultBrowserPackageName(Context context) {
+        final Browsers browser = new Browsers(context, "http://mozilla.org");
+        return (browser.defaultBrowser != null) ? browser.defaultBrowser.packageName : "";
+    }
+
     public ActivityInfo[] getInstalledBrowsers() {
         final Collection<ActivityInfo> collection = browsers.values();
 
