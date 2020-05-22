@@ -16,12 +16,19 @@ import android.webkit.CookieManager;
 import android.webkit.URLUtil;
 import android.widget.Toast;
 
+import com.tonyodev.fetch2.Fetch;
+import com.tonyodev.fetch2.FetchConfiguration;
+import com.tonyodev.fetch2.NetworkType;
+import com.tonyodev.fetch2.Priority;
+import com.tonyodev.fetch2.Request;
+
 import org.mozilla.focus.FocusApplication;
 import org.mozilla.focus.R;
 import org.mozilla.focus.components.RelocateService;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.rocket.tabs.web.Download;
 
+import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -63,7 +70,10 @@ public class EnqueueDownloadTask extends AsyncTask<Void, Void, EnqueueDownloadTa
         // so far each download always return null even for an image.
         // But we might move downloaded file to another directory.
         // So, for now we always save file to DIRECTORY_DOWNLOADS
-        final String dir = Environment.DIRECTORY_DOWNLOADS;
+//        final String dir = Environment.DIRECTORY_DOWNLOADS;
+        final String type = Environment.DIRECTORY_DOWNLOADS;
+        final File dir = Environment.getExternalStoragePublicDirectory(type);
+        final File file = new File(dir, fileName);
 
         if (!Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
             return ErrorCode.STORAGE_UNAVAILABLE;
@@ -74,68 +84,93 @@ public class EnqueueDownloadTask extends AsyncTask<Void, Void, EnqueueDownloadTa
             return ErrorCode.FILE_NOT_SUPPORTED;
         }
 
-        if (!isDownloadManagerEnabled(context)) {
-            return ErrorCode.DOWNLOAD_MANAGER_DISABLED;
+        FetchConfiguration fetchConfiguration = new FetchConfiguration.Builder(context)
+                .setDownloadConcurrentLimit(3)
+                .build();
+
+        final Fetch fetch = Fetch.Impl.getInstance(fetchConfiguration);
+
+//        String url = "http:www.example.com/test.txt";
+//        String file = "/downloads/test.txt";
+
+        final Request request = new Request(download.getUrl(), file.getAbsolutePath());
+        request.setPriority(Priority.HIGH);
+        request.setNetworkType(NetworkType.ALL);
+        request.addHeader("User-Agent", download.getUserAgent());
+        if (cookie != null) {
+            request.addHeader("Cookie", cookie);
         }
+        request.addHeader("Referer", refererUrl);
 
-        final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(download.getUrl()))
-                .addRequestHeader("User-Agent", download.getUserAgent())
-                .addRequestHeader("Cookie", cookie)
-                .addRequestHeader("Referer", refererUrl)
-                .setDestinationInExternalPublicDir(dir, fileName)
-                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                .setMimeType(download.getMimeType());
+        fetch.enqueue(request, updatedRequest -> {
+            //Request was successfully enqueued for download.
+        }, error -> {
+            //An error occurred enqueuing the request.
+            Log.d("EnqueueDownloadTask", "doInBackground: error -> " + error.toString());
+        });
 
-        request.allowScanningByMediaScanner();
-
-        final DownloadManager manager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
-        final Long downloadId = manager.enqueue(request);
-
-        DownloadInfo downloadInfo = new DownloadInfo();
-        downloadInfo.setDownloadId(downloadId);
-        // On Pixel, When downloading downloaded content which is still available, DownloadManager
-        // returns the previous download id.
-        // For that case we remove the old entry and re-insert a new one to move it to the top.
-        // (Note that this is not the case for devices like Samsung, I have not verified yet if this
-        // is a because of on those devices we move files to SDcard or if this is true even if the
-        // file is not moved.)
-        if (!DownloadInfoManager.getInstance().recordExists(downloadId)) {
-            FocusApplication app = ((FocusApplication) context.getApplicationContext());
-            if (!app.isInPrivateProcess()) {
-                DownloadInfoManager.getInstance().insert(downloadInfo, new DownloadInfoManager.AsyncInsertListener() {
-                    @Override
-                    public void onInsertComplete(long id) {
-                        try {
-                            GetDownloadFileHeaderTask.HeaderInfo headerInfo = new GetDownloadFileHeaderTask().execute(download.getUrl()).get();
-                            TelemetryWrapper.startDownloadFile(downloadInfo.getDownloadId().toString(), download.getContentLength() / 1024, headerInfo.isValidSSL, headerInfo.isSupportRange);
-                        } catch (ExecutionException e) {
-                            Log.e(TAG, "Fail sending download telemetry because ExecutionException");
-                        } catch (InterruptedException e) {
-                            Log.e(TAG, "Fail sending download telemetry because InterruptedException");
-                        }
-
-                        DownloadInfoManager.notifyRowUpdated(context, id);
-                    }
-                });
-            }
-        } else {
-            DownloadInfoManager.getInstance().queryByDownloadId(downloadId, new DownloadInfoManager.AsyncQueryListener() {
-                @Override
-                public void onQueryComplete(List downloadInfoList) {
-                    if (!downloadInfoList.isEmpty()) {
-                        DownloadInfo info = (DownloadInfo) downloadInfoList.get(0);
-                        DownloadInfoManager.getInstance().delete(info.getRowId(), null);
-                        DownloadInfoManager.getInstance().insert(info, new DownloadInfoManager.AsyncInsertListener() {
-                            @Override
-                            public void onInsertComplete(long rowId) {
-                                DownloadInfoManager.notifyRowUpdated(context, rowId);
-                                RelocateService.broadcastRelocateFinished(context, rowId);
-                            }
-                        });
-                    }
-                }
-            });
-        }
+//        if (!isDownloadManagerEnabled(context)) {
+//            return ErrorCode.DOWNLOAD_MANAGER_DISABLED;
+//        }
+//
+//        final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(download.getUrl()))
+//                .addRequestHeader("User-Agent", download.getUserAgent())
+//                .addRequestHeader("Cookie", cookie)
+//                .addRequestHeader("Referer", refererUrl)
+//                .setDestinationInExternalPublicDir(dir, fileName)
+//                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+//                .setMimeType(download.getMimeType());
+//
+//        request.allowScanningByMediaScanner();
+//
+//        final DownloadManager manager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
+//        final Long downloadId = manager.enqueue(request);
+//
+//        DownloadInfo downloadInfo = new DownloadInfo();
+//        downloadInfo.setDownloadId(downloadId);
+//        // On Pixel, When downloading downloaded content which is still available, DownloadManager
+//        // returns the previous download id.
+//        // For that case we remove the old entry and re-insert a new one to move it to the top.
+//        // (Note that this is not the case for devices like Samsung, I have not verified yet if this
+//        // is a because of on those devices we move files to SDcard or if this is true even if the
+//        // file is not moved.)
+//        if (!DownloadInfoManager.getInstance().recordExists(downloadId)) {
+//            FocusApplication app = ((FocusApplication) context.getApplicationContext());
+//            if (!app.isInPrivateProcess()) {
+//                DownloadInfoManager.getInstance().insert(downloadInfo, new DownloadInfoManager.AsyncInsertListener() {
+//                    @Override
+//                    public void onInsertComplete(long id) {
+//                        try {
+//                            GetDownloadFileHeaderTask.HeaderInfo headerInfo = new GetDownloadFileHeaderTask().execute(download.getUrl()).get();
+//                            TelemetryWrapper.startDownloadFile(downloadInfo.getDownloadId().toString(), download.getContentLength() / 1024, headerInfo.isValidSSL, headerInfo.isSupportRange);
+//                        } catch (ExecutionException e) {
+//                            Log.e(TAG, "Fail sending download telemetry because ExecutionException");
+//                        } catch (InterruptedException e) {
+//                            Log.e(TAG, "Fail sending download telemetry because InterruptedException");
+//                        }
+//
+//                        DownloadInfoManager.notifyRowUpdated(context, id);
+//                    }
+//                });
+//            }
+//        } else {
+//            DownloadInfoManager.getInstance().queryByDownloadId(downloadId, new DownloadInfoManager.AsyncQueryListener() {
+//                @Override
+//                public void onQueryComplete(List downloadInfoList) {
+//                    if (!downloadInfoList.isEmpty()) {
+//                        DownloadInfo info = (DownloadInfo) downloadInfoList.get(0);
+//                        DownloadInfoManager.getInstance().delete(info.getRowId(), null);
+//                        DownloadInfoManager.getInstance().insert(info, new DownloadInfoManager.AsyncInsertListener() {
+//                            @Override
+//                            public void onInsertComplete(long rowId) {
+//                                DownloadInfoManager.notifyRowUpdated(context, rowId);
+//                                RelocateService.broadcastRelocateFinished(context, rowId);
+//                            }
+//                        });
+//                    }
+//                }
+//            });
+//        }
 
         return ErrorCode.SUCCESS;
     }
@@ -168,14 +203,14 @@ public class EnqueueDownloadTask extends AsyncTask<Void, Void, EnqueueDownloadTa
         }
     }
 
-    private boolean isDownloadManagerEnabled(final Context context) {
-        int state = PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
-        try {
-            state = context.getPackageManager().getApplicationEnabledSetting(DOWNLOAD_MANAGER_PACKAGE_NAME);
-        } catch (IllegalArgumentException e) { // throws when the named package does not exist
-            e.printStackTrace();
-        }
-
-        return !(state == PackageManager.COMPONENT_ENABLED_STATE_DISABLED || state == PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER);
-    }
+//    private boolean isDownloadManagerEnabled(final Context context) {
+//        int state = PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
+//        try {
+//            state = context.getPackageManager().getApplicationEnabledSetting(DOWNLOAD_MANAGER_PACKAGE_NAME);
+//        } catch (IllegalArgumentException e) { // throws when the named package does not exist
+//            e.printStackTrace();
+//        }
+//
+//        return !(state == PackageManager.COMPONENT_ENABLED_STATE_DISABLED || state == PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER);
+//    }
 }

@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,7 +29,12 @@ import androidx.recyclerview.widget.SimpleItemAnimator;
 
 import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
+import com.tonyodev.fetch2.Download;
+import com.tonyodev.fetch2.Fetch;
+import com.tonyodev.fetch2.FetchConfiguration;
+import com.tonyodev.fetch2core.Func;
 
+import org.jetbrains.annotations.NotNull;
 import org.mozilla.focus.R;
 import org.mozilla.focus.download.DownloadInfoManager;
 import org.mozilla.focus.widget.DownloadListAdapter;
@@ -37,6 +43,8 @@ import org.mozilla.rocket.content.ExtentionKt;
 import org.mozilla.rocket.download.DownloadIndicatorViewModel;
 import org.mozilla.rocket.download.DownloadInfoPack;
 import org.mozilla.rocket.download.DownloadInfoViewModel;
+
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -159,6 +167,19 @@ public class DownloadsFragment extends PanelFragment implements DownloadInfoView
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(broadcastReceiver, new IntentFilter(DownloadInfoManager.ROW_UPDATED));
         getActivity().registerReceiver(broadcastReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
         viewModel.registerForProgressUpdate(this);
+
+        FetchConfiguration fetchConfiguration = new FetchConfiguration.Builder(getContext())
+                .setDownloadConcurrentLimit(3)
+                .build();
+
+        final Fetch fetch = Fetch.Impl.getInstance(fetchConfiguration);
+        //Query all downloads
+        fetch.getDownloads(new Func<List<Download>>() {
+            @Override
+            public void call(@NotNull List<Download> result) {
+                Log.d("DownloadsFragment", "getDownloads: " + result.toString());
+            }
+        });
     }
 
     @Override
