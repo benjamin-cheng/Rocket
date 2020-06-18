@@ -24,18 +24,13 @@ class AddNewTopSitesFragment : Fragment() {
     @Inject
     lateinit var addNewTopSitesViewModelCreator: Lazy<AddNewTopSitesViewModel>
 
-    @Inject
-    lateinit var chromeViewModelCreator: Lazy<ChromeViewModel>
-
     private lateinit var addNewTopSitesViewModel: AddNewTopSitesViewModel
-    private lateinit var chromeViewModel: ChromeViewModel
     private lateinit var adapter: DelegateAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         appComponent().inject(this)
         super.onCreate(savedInstanceState)
         addNewTopSitesViewModel = getActivityViewModel(addNewTopSitesViewModelCreator)
-        chromeViewModel = getActivityViewModel(chromeViewModelCreator)
 
         addNewTopSitesViewModel.requestRecommendedSitesList()
     }
@@ -51,11 +46,10 @@ class AddNewTopSitesFragment : Fragment() {
     }
 
     private fun initRecyclerView() {
-        val specifiedFaviconBgColors = getFaviconBgColorsFromResource(recycler_view.context.applicationContext)
         adapter = DelegateAdapter(
             AdapterDelegatesManager().apply {
                 add(RecommendedSitesUiCategory::class, R.layout.item_recommended_sites_category, RecommendedSitesCategoryAdapterDelegate())
-                add(Site.UrlSite.FixedSite::class, R.layout.item_top_site, SiteAdapterDelegate(addNewTopSitesViewModel, chromeViewModel, specifiedFaviconBgColors))
+                add(Site.UrlSite.FixedSite::class, R.layout.item_recommended_site, RecommendedSitesAdapterDelegate(addNewTopSitesViewModel))
             }
         )
         recycler_view.apply {

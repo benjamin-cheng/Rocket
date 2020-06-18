@@ -64,6 +64,7 @@ import org.mozilla.rocket.extension.showFxToast
 import org.mozilla.rocket.fxa.ProfileActivity
 import org.mozilla.rocket.home.contenthub.ui.ContentHub
 import org.mozilla.rocket.home.logoman.ui.LogoManNotification
+import org.mozilla.rocket.home.topsites.ui.AddNewTopSitesActivity
 import org.mozilla.rocket.home.topsites.ui.Site
 import org.mozilla.rocket.home.topsites.ui.SitePage
 import org.mozilla.rocket.home.topsites.ui.SitePageAdapterDelegate
@@ -390,7 +391,7 @@ class HomeFragment : LocaleAwareFragment(), ScreenNavigator.HomeScreen {
 
     private fun showShoppingSearch() {
         val context: Context = this.context ?: return
-        startActivity(ShoppingSearchActivity.getStartIntent(context))
+        startActivity(AddNewTopSitesActivity.getStartIntent(context))
     }
 
     private fun initLogoManNotification() {
