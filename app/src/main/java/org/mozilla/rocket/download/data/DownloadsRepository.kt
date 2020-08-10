@@ -6,7 +6,7 @@ import org.mozilla.rocket.tabs.web.Download
 import java.io.File
 
 class DownloadsRepository(
-    private val downloadManagerDataSource: AndroidDownloadManagerDataSource,
+    private val downloadManagerDataSource: DownloadManagerDataSource,
     private val downloadsLocalDataSource: DownloadsLocalDataSource
 ) {
 

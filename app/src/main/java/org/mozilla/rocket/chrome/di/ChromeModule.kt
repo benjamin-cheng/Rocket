@@ -20,6 +20,7 @@ import org.mozilla.rocket.chrome.domain.ShouldShowNewMenuItemHintUseCase
 import org.mozilla.rocket.download.DownloadIndicatorViewModel
 import org.mozilla.rocket.download.DownloadInfoViewModel
 import org.mozilla.rocket.download.data.AndroidDownloadManagerDataSource
+import org.mozilla.rocket.download.data.DownloadManagerDataSource
 import org.mozilla.rocket.download.data.DownloadsLocalDataSource
 import org.mozilla.rocket.download.data.DownloadsRepository
 import org.mozilla.rocket.helper.StorageHelper
@@ -67,7 +68,7 @@ object ChromeModule {
     @JvmStatic
     @Singleton
     @Provides
-    fun provideDownloadManagerDataSource(appContext: Context): AndroidDownloadManagerDataSource = AndroidDownloadManagerDataSource(appContext)
+    fun provideDownloadManagerDataSource(appContext: Context): DownloadManagerDataSource = AndroidDownloadManagerDataSource(appContext)
 
     @JvmStatic
     @Singleton
@@ -78,7 +79,7 @@ object ChromeModule {
     @Singleton
     @Provides
     fun provideDownloadInfoRepository(
-        downloadManagerDataSource: AndroidDownloadManagerDataSource,
+        downloadManagerDataSource: DownloadManagerDataSource,
         downloadsLocalDataSource: DownloadsLocalDataSource
     ): DownloadsRepository = DownloadsRepository(
         downloadManagerDataSource,

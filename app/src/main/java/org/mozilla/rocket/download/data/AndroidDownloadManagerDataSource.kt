@@ -21,11 +21,11 @@ import java.net.URLEncoder
 import java.util.Locale
 import javax.net.ssl.SSLHandshakeException
 
-class AndroidDownloadManagerDataSource(private val appContext: Context) {
+class AndroidDownloadManagerDataSource(private val appContext: Context) : DownloadManagerDataSource {
 
     private val downloadManager by lazy { appContext.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager }
 
-    suspend fun enqueue(download: Download, refererUrl: String?): DownloadsRepository.DownloadState = withContext(Dispatchers.IO) {
+    override suspend fun enqueue(download: Download, refererUrl: String?): DownloadsRepository.DownloadState = withContext(Dispatchers.IO) {
         val cookie = CookieManager.getInstance().getCookie(download.url)
         val fileName = download.name
             ?: URLUtil.guessFileName(download.url, download.contentDisposition, download.mimeType)
@@ -61,7 +61,7 @@ class AndroidDownloadManagerDataSource(private val appContext: Context) {
         return@withContext DownloadsRepository.DownloadState.Success(downloadId, download.isStartFromContextMenu)
     }
 
-    fun addCompletedDownload(
+    override fun addCompletedDownload(
         title: String,
         description: String,
         isMediaScannerScannable: Boolean,
@@ -71,7 +71,7 @@ class AndroidDownloadManagerDataSource(private val appContext: Context) {
         showNotification: Boolean
     ) = downloadManager.addCompletedDownload(title, description, isMediaScannerScannable, mimeType, path, length, showNotification)
 
-    suspend fun getDownloadUrlHeaderInfo(url: String): DownloadsRepository.HeaderInfo = withContext(Dispatchers.IO) {
+    override suspend fun getDownloadUrlHeaderInfo(url: String): DownloadsRepository.HeaderInfo = withContext(Dispatchers.IO) {
         TrafficStats.setThreadStatsTag(SocketTags.DOWNLOADS)
         var connection: HttpURLConnection? = null
         var isSupportRange = false
@@ -98,7 +98,7 @@ class AndroidDownloadManagerDataSource(private val appContext: Context) {
         return@withContext DownloadsRepository.HeaderInfo(isSupportRange, isValidSSL, contentLength)
     }
 
-    suspend fun getDownload(downloadId: Long): DownloadInfo? = withContext(Dispatchers.IO) {
+    override suspend fun getDownload(downloadId: Long): DownloadInfo? = withContext(Dispatchers.IO) {
         val query = DownloadManager.Query()
         query.setFilterById(downloadId)
         downloadManager.query(query)?.use { cursor ->
@@ -126,7 +126,7 @@ class AndroidDownloadManagerDataSource(private val appContext: Context) {
         return@withContext null
     }
 
-    suspend fun getDownloadingItems(runningIds: LongArray): List<DownloadInfo> = withContext(Dispatchers.IO) {
+    override suspend fun getDownloadingItems(runningIds: LongArray): List<DownloadInfo> = withContext(Dispatchers.IO) {
         val query = DownloadManager.Query()
         query.setFilterById(*runningIds)
         query.setFilterByStatus(DownloadManager.STATUS_RUNNING)
@@ -147,7 +147,7 @@ class AndroidDownloadManagerDataSource(private val appContext: Context) {
         return@withContext emptyList<DownloadInfo>()
     }
 
-    suspend fun delete(downloadId: Long) = withContext(Dispatchers.IO) {
+    override suspend fun delete(downloadId: Long) = withContext(Dispatchers.IO) {
         downloadManager.remove(downloadId)
     }
 
