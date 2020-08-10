@@ -19,10 +19,10 @@ import org.mozilla.rocket.chrome.domain.ReadNewMenuItemsUseCase
 import org.mozilla.rocket.chrome.domain.ShouldShowNewMenuItemHintUseCase
 import org.mozilla.rocket.download.DownloadIndicatorViewModel
 import org.mozilla.rocket.download.DownloadInfoViewModel
-import org.mozilla.rocket.download.data.AndroidDownloadManagerDataSource
 import org.mozilla.rocket.download.data.DownloadManagerDataSource
 import org.mozilla.rocket.download.data.DownloadsLocalDataSource
 import org.mozilla.rocket.download.data.DownloadsRepository
+import org.mozilla.rocket.download.data.FetchDownloadManagerDataSource
 import org.mozilla.rocket.helper.StorageHelper
 import org.mozilla.rocket.home.domain.IsHomeScreenShoppingButtonEnabledUseCase
 import org.mozilla.rocket.persistance.History.HistoryDatabase
@@ -68,7 +68,7 @@ object ChromeModule {
     @JvmStatic
     @Singleton
     @Provides
-    fun provideDownloadManagerDataSource(appContext: Context): DownloadManagerDataSource = AndroidDownloadManagerDataSource(appContext)
+    fun provideDownloadManagerDataSource(appContext: Context): DownloadManagerDataSource = FetchDownloadManagerDataSource(appContext)
 
     @JvmStatic
     @Singleton
